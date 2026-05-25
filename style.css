@@ -62,8 +62,8 @@ header {
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.8);
     position: relative;
-    width: fit-content; /* 背景をブロックの幅にぴったり合わせる */
-    margin: 0 auto; /* 盤面を中央寄せにする */
+    width: fit-content;
+    align-self: center; /* ★変更: フレックスコンテナ内で強制的に中身のサイズに縮小＆中央寄せ */
 }
 
 .block {
