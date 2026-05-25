@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My SameGame</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <div id="stats">
+                <div>Total: <span id="total-score">0</span></div>
+                <div>Stage <span id="stage">1</span> / 20</div>
+                <div>Score: <span id="stage-score">0</span></div>
+            </div>
+            <div class="controls">
+                <button id="btn-result">リザルト</button>
+                <button id="btn-giveup">やめる</button>
+                <button id="btn-bgm">BGM: OFF</button>
+                <button id="btn-se">SE: OFF</button>
+            </div>
+        </header>
+        <main>
+            <div id="board"></div>
+        </main>
+    </div>
+
+    <div id="modal" class="hidden">
+        <div class="modal-content">
+            <h2 id="modal-title">タイトル</h2>
+            <div id="modal-body"></div>
+            <div id="modal-buttons" class="modal-buttons"></div>
+        </div>
+    </div>
+    
+    <audio id="audio-bgm" src="BGM.m4a" loop></audio>
+
+    <script src="game.js"></script>
+</body>
+</html>
