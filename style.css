@@ -38,6 +38,18 @@ header {
     flex-wrap: wrap;
 }
 
+/* 桁数変動によるレイアウトのプルプル防止 */
+#total-score, #stage-score {
+    display: inline-block;
+    min-width: 4em;
+    text-align: right;
+}
+#select-count {
+    display: inline-block;
+    width: 2em; /* 最大3桁までレイアウトを動かさない */
+    text-align: right;
+}
+
 .controls button {
     background-color: #333;
     color: #fff;
