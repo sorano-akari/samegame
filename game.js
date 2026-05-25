@@ -95,7 +95,7 @@ function playFanfareSE() {
 function calcStageParams(stage) {
     const cycle = Math.floor((stage - 1) / 4);
     const step = (stage - 1) % 4;
-    return { r: 10 + (cycle * 2), c: 20 + (cycle * 4), colors: 4 + step };
+    return { r: 10 + (cycle * 2), c: 20 + (cycle * 4), colors: 3 + step };
 }
 
 function calcTotalScore() {
