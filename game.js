@@ -8,6 +8,7 @@ let stageScore = 0;
 
 let boardData = [];
 let rows = 0, cols = 0, colorsCount = 0;
+let hasErased = false;
 
 // スコア保存関数
 function saveHighScores() {
@@ -55,19 +56,54 @@ function playSE() {
     osc.start(); osc.stop(ctx.currentTime + 0.1);
 }
 
-// 10個以上消しの派手な音（ギュイーン！）
-function playComboSE() {
+// 10個（単音）、15個（和音）、20個（チャリーン！）で完全に鳴り分けるコンボ音
+function playComboSE(count) {
     if (!seEnabled) return;
     const ctx = getAudioCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(440, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.3);
-    gain.gain.setValueAtTime(0.1, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.start(); osc.stop(ctx.currentTime + 0.3);
+
+    if (count >= 20) {
+        // 【20個以上】チャリーン！と鳴る高音の2連続アルペジオ
+        const times = [0, 0.08];
+        const freqs = [1046.50, 1567.98]; // C6 -> G6
+        freqs.forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + times[i]);
+            gain.gain.setValueAtTime(0.08, ctx.currentTime + times[i]);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + times[i] + 0.3);
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + times[i]); osc.stop(ctx.currentTime + times[i] + 0.3);
+        });
+    } else if (count >= 15) {
+        // 【15個以上】分厚いテクノポップ風のシンセ和音（ノコギリ波＋デチューン）
+        const freqs = [523.25, 659.25, 783.99]; // C5, E5, G5
+        freqs.forEach(freq => {
+            // 音程をわずかにズラした音（デチューン）を重ねてリッチにする
+            [-5, 0, 5].forEach(detune => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sawtooth'; // ギラギラしたノコギリ波
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                osc.detune.setValueAtTime(detune, ctx.currentTime);
+                gain.gain.setValueAtTime(0.025, ctx.currentTime); // 重ねる分、音量を調整
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.start(); osc.stop(ctx.currentTime + 0.4);
+            });
+        });
+    } else {
+        // 【10個以上】ピコーン！と鋭く上がるレトロな単音
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+        osc.frequency.exponentialRampToValueAtTime(1174.66, ctx.currentTime + 0.15); // D6
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + 0.15);
+    }
 }
 
 // クリア・全消しのファンファーレ
@@ -105,6 +141,10 @@ function calcTotalScore() {
 // --- 初期化 ---
 function initStage(isRetry = false) {
     if (!isRetry) stageScore = 0;
+    
+    hasErased = false;
+    const shuffleBtn = document.getElementById('btn-shuffle');
+    if (shuffleBtn) shuffleBtn.disabled = false;
     
     const params = calcStageParams(currentStage);
     rows = params.r;
@@ -182,24 +222,35 @@ function getConnectedBlocks(startY, startX) {
 
 function handleMouseOver(y, x) {
     const connected = getConnectedBlocks(y, x);
+    const countEl = document.getElementById('select-count');
+    
     if (connected.length >= 2) {
+        if (countEl) countEl.innerText = connected.length; // 個数を表示
         connected.forEach(pos => {
             const block = document.querySelector(`.block[data-y="${pos.y}"][data-x="${pos.x}"]`);
             if (block) block.classList.add('highlight');
         });
+    } else {
+        if (countEl) countEl.innerText = '0';
     }
 }
 
 function clearHighlight() {
     document.querySelectorAll('.highlight').forEach(b => b.classList.remove('highlight'));
+    const countEl = document.getElementById('select-count');
+    if (countEl) countEl.innerText = '0'; // 離れたら0に戻す
 }
 
 function handleClick(y, x) {
     const connected = getConnectedBlocks(y, x);
     if (connected.length < 2) return;
 
+    hasErased = true;
+    const shuffleBtn = document.getElementById('btn-shuffle');
+    if (shuffleBtn) shuffleBtn.disabled = true;
+
     if (connected.length >= 10) {
-        playComboSE();
+        playComboSE(connected.length); // ここに個数を渡す！
     } else {
         playSE();
     }
@@ -368,6 +419,12 @@ function confirmResetHighScores() {
         }}
     ]);
 }
+
+document.getElementById('btn-shuffle').addEventListener('click', () => {
+    if (!hasErased) {
+        initStage(true);
+    }
+});
 
 document.getElementById('btn-giveup').addEventListener('click', () => {
     showModal('やめる', '<p>どうする？<br>（過去の最高記録は保持されるよ）</p>', [
